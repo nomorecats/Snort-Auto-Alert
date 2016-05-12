@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DATES=(1 5 9 13 17 21 25 29)
+DATES=(12 1 5 9 13 17 21 25 29)
 DATE=$(date +%y-%m-%d)
 daybreak=$(date +%d)
 stringd=${DATES[*]}
@@ -11,13 +11,17 @@ check=$(echo $stringd | grep -i $daybreak)
 
 statfile () {
 	cat /Users/$USER/snortreport/currentlog | grep -i "Priority: 1" > /Users/$USER/snortreport/tmp/1
-	cat /Users/$USER/snortreport/currentlog | grep -i -A 1 "Priority: 1" > /Users/$USER/snortreport/tmp/1stat
+	cat /Users/$USER/snortreport/currentlog | grep -i -A 1 -B 1 "Priority: 1" > /Users/$USER/snortreport/tmp/1stat
 	cat /Users/$USER/snortreport/currentlog | grep -i "Priority: 2" > /Users/$USER/snortreport/tmp/2
+	cat /Users/$USER/snortreport/currentlog | grep -i -A 1 -B 1 "Priority: 2" > /Users/$USER/snortreport/tmp/2stat
 	cat /Users/$USER/snortreport/currentlog | grep -i "Priority: 3" > /Users/$USER/snortreport/tmp/3
+	cat /Users/$USER/snortreport/currentlog | grep -i -A 1 -B 1 "Priority: 3" > /Users/$USER/snortreport/tmp/3stat
 	p1=$(wc -l /Users/$USER/snortreport/tmp/1)
 	p2=$(wc -l /Users/$USER/snortreport/tmp/2)
 	p3=$(wc -l /Users/$USER/snortreport/tmp/3)
 	rdv=$(cat /Users/$USER/snortreport/tmp/1stat)
+	rdv2=$(cat /Users/$USER/snortreport/tmp/2stat)
+	rdv3=$(cat /Users/$USER/snortreport/tmp/3stat)
 
 echo "NIDS Server report for $DATE"  >> /Users/$USER/snortreport/tmp/mail
 echo "Detection Statistics:" >> /Users/$USER/snortreport/tmp/mail
@@ -26,10 +30,16 @@ echo "				Medium: $p2" >> /Users/$USER/snortreport/tmp/mail
 echo "				Low: $p3" >> /Users/$USER/snortreport/tmp/mail
 echo "" >> /Users/$USER/snortreport/tmp/mail
 echo "The log for this session is in archives and named $DATE" >> /Users/$USER/snortreport/tmp/mail
-echo "Here is the immediant High Alerts:" >> /Users/$USER/snortreport/tmp/mail
+echo "Here is the High Alerts:" >> /Users/$USER/snortreport/tmp/mail
 echo "$rdv" >> /Users/$USER/snortreport/tmp/mail
+echo "Here is the Medium Alerts:" >> /Users/$USER/snortreport/tmp/mail
+echo "$rdv2" >> /Users/$USER/snortreport/tmp/mail
+echo "Here is the Low Alerts:" >> /Users/$USER/snortreport/tmp/mail
+echo "$rdv3" >> /Users/$USER/snortreport/tmp/mail
 
 mail -s "IDS Report $DATE" "jack@jackserv.org" < /Users/$USER/snortreport/tmp/mail
+
+sleep 10
 
 rm  /Users/$USER/snortreport/tmp/mail
 }
@@ -46,7 +56,7 @@ while true
 
 cat /var/log/snort/alert > /Users/$USER/snortreport/currentlog
 
-sleep 1000
+sleep 10
 
 if [[ $check != "" ]]
 then
