@@ -1,0 +1,45 @@
+#!/bin/bash
+
+echo "Auto Erase and imaging program started..."
+
+erase () {
+# diskutil unmountDisk force disk1
+# diskutil unmountDisk force disk2
+# diskutil eraseDisk JHFS+ 1 disk1
+# diskutil unmountDisk force disk1
+# diskutil unmountDisk force disk2
+echo "Disk has been erased...."
+}
+
+while true
+        do
+
+while [[ $break != "1" ]]
+        do
+
+cdev=$(diskutil list | grep "disk1")
+
+if [[ $cdev == "" ]]
+        then
+echo "restart" >  /dev/null
+        else
+                echo "Device ready...."
+                erase
+                break=1
+fi
+done
+
+while [[ $definer != "1" ]]
+        do
+
+cdev2=$(diskutil list | grep "disk1")
+
+if [[ $cdev2 == "" ]]
+        then
+                definer=1
+                echo "Device disconnected"
+        else
+                echo -n "."
+fi
+done
+done
