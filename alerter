@@ -1,70 +1,64 @@
 #!/bin/bash
 
-DATES=(12 1 5 9 13 17 21 25 29)
+while [[ $def != "1" ]]
+	do
+
+overflow=$(wc -l /var/log/snort/alert | awk '{print $1;}')
+DATES=(12 16 1 5 9 13 17 20 21 25 29)
 DATE=$(date +%y-%m-%d)
 daybreak=$(date +%d)
 stringd=${DATES[*]}
 check=$(echo $stringd | grep -i $daybreak)
 
+if [[ $check != "" ]] || [[ $overflow -gt "3000" ]]
+	then
+		
+		snortpid2=$(ps aux | grep "snort" | awk '{print $2}' | sed -n 1p)
+		kill $snortpid2 > /dev/null
+		cat /var/log/snort/alert > /Library/Server/Web/Data/sites/log.jackserv.org/log/$DATE
+		cat /var/log/snort/alert | grep -i "Priority: 1" > /Users/$USER/snortreport/tmp/1
+		cat /var/log/snort/alert | grep -i "Priority: 2" > /Users/$USER/snortreport/tmp/2
+		cat /var/log/snort/alert | grep -i "Priority: 1" > /Users/$USER/snortreport/tmp/3
+		p1=$(wc -l /Users/$USER/snortreport/tmp/1)
+		p2=$(wc -l /Users/$USER/snortreport/tmp/2)
+		p3=$(wc -l /Users/$USER/snortreport/tmp/3)
+		echo "NIDS Server report for $DATE"  >> /Users/$USER/snortreport/tmp/mail
+		echo "Detection Statistics:" >> /Users/$USER/snortreport/tmp/mail
+		echo "				High: $p1" >> /Users/$USER/snortreport/tmp/mail
+		echo "				Medium: $p2" >> /Users/$USER/snortreport/tmp/mail           
+		echo "				Low: $p3" >> /Users/$USER/snortreport/tmp/mail
+		echo "The log can be viewed at http://log.jackserv.org/log/$DATE" >> /Users/$USER/snortreport/tmp/mail
+		mail -s "IDS Report $DATE" "jack@jackserv.org" < /Users/$USER/snortreport/tmp/mail
+		echo $DATE > /var/log/snort/alert
+		rm -rf /Users/$USER/snortreport/tmp/
+		snort -D -i en1 -c /etc/snort.conf -A full -h 192.168.2.0/24 > /dev/null
+		mkdir /Users/$USER/snortreport/tmp/
+		def=1
+	else
+		cat /var/log/snort/alert > # PATH TO LIVE LOG 
+		sleep 5
+fi
+done
 
-# Yes I know that there is a more easy way to do this but, I ran into some problems
-
-statfile () {
-	cat /Users/$USER/snortreport/currentlog | grep -i "Priority: 1" > /Users/$USER/snortreport/tmp/1
-	cat /Users/$USER/snortreport/currentlog | grep -i -A 1 -B 1 "Priority: 1" > /Users/$USER/snortreport/tmp/1stat
-	cat /Users/$USER/snortreport/currentlog | grep -i "Priority: 2" > /Users/$USER/snortreport/tmp/2
-	cat /Users/$USER/snortreport/currentlog | grep -i -A 1 -B 1 "Priority: 2" > /Users/$USER/snortreport/tmp/2stat
-	cat /Users/$USER/snortreport/currentlog | grep -i "Priority: 3" > /Users/$USER/snortreport/tmp/3
-	cat /Users/$USER/snortreport/currentlog | grep -i -A 1 -B 1 "Priority: 3" > /Users/$USER/snortreport/tmp/3stat
-	p1=$(wc -l /Users/$USER/snortreport/tmp/1)
-	p2=$(wc -l /Users/$USER/snortreport/tmp/2)
-	p3=$(wc -l /Users/$USER/snortreport/tmp/3)
-	rdv=$(cat /Users/$USER/snortreport/tmp/1stat)
-	rdv2=$(cat /Users/$USER/snortreport/tmp/2stat)
-	rdv3=$(cat /Users/$USER/snortreport/tmp/3stat)
-
-echo "NIDS Server report for $DATE"  >> /Users/$USER/snortreport/tmp/mail
-echo "Detection Statistics:" >> /Users/$USER/snortreport/tmp/mail
-echo "				High: $p1" >> /Users/$USER/snortreport/tmp/mail
-echo "				Medium: $p2" >> /Users/$USER/snortreport/tmp/mail           
-echo "				Low: $p3" >> /Users/$USER/snortreport/tmp/mail
-echo "" >> /Users/$USER/snortreport/tmp/mail
-echo "The log for this session is in archives and named $DATE" >> /Users/$USER/snortreport/tmp/mail
-echo "Here is the High Alerts:" >> /Users/$USER/snortreport/tmp/mail
-echo "$rdv" >> /Users/$USER/snortreport/tmp/mail
-echo "Here is the Medium Alerts:" >> /Users/$USER/snortreport/tmp/mail
-echo "$rdv2" >> /Users/$USER/snortreport/tmp/mail
-echo "Here is the Low Alerts:" >> /Users/$USER/snortreport/tmp/mail
-echo "$rdv3" >> /Users/$USER/snortreport/tmp/mail
-
-mail -s "IDS Report $DATE" "jack@jackserv.org" < /Users/$USER/snortreport/tmp/mail
-
-sleep 10
-
-rm  /Users/$USER/snortreport/tmp/mail
-}
-
-cleanmove () {
-
-cat /Users/$USER/snortreport/currentlog > /Users/$USER/snortreport/archive/$DATE
-echo "FRESH START" > /var/log/snort/alert
-rm /Users/$USER/snortreport/currentlog
-} 
-
-while true
+while [[ $def2 != "1" ]]
 	do
 
-cat /var/log/snort/alert > /Users/$USER/snortreport/currentlog
-
-sleep 10
+overflow2=$(wc -l /var/log/snort/alert | awk '{print $1;}')
 
 if [[ $check != "" ]]
-then
-	statfile
-	cleanmove
-	sleep 86500
-else
-	continue
+	then
+		cat /var/log/snort/alert > # PATH TO ARCHIVE FOLDER OR SITE
+		sleep 5
+	else
+		def2=1
 fi
-
+if [[ $overflow2 -gt "3000" ]]
+	then
+		def2=1
+	else
+		echo "." > /dev/null
+fi
 done
+
+./weblog
+
