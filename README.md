@@ -1,3 +1,6 @@
 # Snort-Auto-Alert
-Use this script to automatically archive alerts by date and send email notifications every so days.
-this was made for osx but you can set it up for your file locations.
+Automatic logging and archiving for snort
+#Features
+Sends email to user every so days with statistics of priority
+
+Automatically date logs and upload them to web site or place of your choice
